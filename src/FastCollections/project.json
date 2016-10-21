@@ -1,0 +1,22 @@
+{
+  "version": "0.1.0.0",
+
+  "dependencies": {
+    "DotNetCross.Memory.Unsafe": "0.2.3.4",
+    "System.Collections": "4.0.11",
+    "System.Diagnostics.Debug": "4.0.11",
+    "System.Runtime": "4.1.0",
+    "System.Runtime.Extensions": "4.1.0",
+    "System.Runtime.InteropServices": "4.1.0"
+  },
+
+  "frameworks": {
+    "netstandard1.1": {
+      "imports": "dnxcore50"
+    }
+  },
+
+  "buildOptions": {
+    "allowUnsafe": true 
+  }
+}

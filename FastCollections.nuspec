@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>FastCollections</id>
+    <version>0.1.0.0</version>
+    <title>Fast Collections</title>
+    <authors>Russ Powers</authors>
+    <owners>russpowers</owners>
+    <licenseUrl>https://github.com/russpowers/FastCollections/blob/master/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/russpowers/FastCollections</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>High-performance, memory-efficient collections for .NET</description>
+    <releaseNotes>Initial release</releaseNotes>
+    <copyright>Copyright 2016</copyright>
+    <tags>B-tree Btree collection dictionary sorted</tags>
+    <dependencies>
+      <group targetFramework="MonoAndroid1.0" />
+      <group targetFramework="MonoTouch1.0" />
+      <group targetFramework=".NETFramework4.5" />
+      <group targetFramework=".NETFramework4.6" />
+      <group targetFramework=".NETStandard1.1">
+        <dependency id="DotNetCross.Memory.Unsafe" version="0.2.3.4" />
+        <dependency id="System.Collections" version="4.0.11" />
+        <dependency id="System.Diagnostics.Debug" version="4.0.11" />
+        <dependency id="System.Runtime" version="4.1.0" />
+        <dependency id="System.Runtime.Extensions" version="4.1.0" />
+        <dependency id="System.Runtime.InteropServices" version="4.1.0" />
+      </group>
+      <group targetFramework="Windows8.0" />
+      <group targetFramework="WindowsPhoneApp8.1" />
+      <group targetFramework="Xamarin.iOS1.0" />
+      <group targetFramework="Xamarin.Mac2.0" />
+      <group targetFramework="Xamarin.TVOS1.0" />
+      <group targetFramework="Xamarin.WatchOS1.0" />
+      <group targetFramework="dnx451" />
+      <group targetFramework="dnxcore50" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="src\FastCollections\bin\Release\netstandard1.1\FastCollections.dll" target="lib\netstandard1.1" />
+    <file src="src\FastCollections\bin\Release\netstandard1.1\FastCollections.dll" target="lib\portable-net45+win8+wpa81" />
+  </files>
+</package>

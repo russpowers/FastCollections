@@ -1,0 +1,22 @@
+{
+  "version": "0.1.0.0",
+  "buildOptions": {
+    "emitEntryPoint": true,
+    "optimize": true
+  },
+
+  "dependencies": {
+    "BenchmarkDotNet": "0.9.9",
+    "Microsoft.NETCore.App": {
+      "type": "platform",
+      "version": "1.0.1"
+    },
+    "FastCollections": "0.1.0.0"
+  },
+
+  "frameworks": {
+    "netcoreapp1.0": {
+      "imports": "dnxcore50"
+    }
+  }
+}

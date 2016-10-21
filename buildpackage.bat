@@ -1,0 +1,1 @@
+nuget pack FastCollections.nuspec -build -outputdirectory build
