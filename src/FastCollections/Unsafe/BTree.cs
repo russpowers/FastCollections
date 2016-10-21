@@ -104,10 +104,11 @@ namespace FastCollections.Unsafe
         /// This is left over from the C++ version, and it seems to work well, so I've left it.
         /// It is only used internally, however, and only enumerables are exposed.
         /// </summary>
-        internal struct Iterator
+        public struct Iterator
         {
             public static bool operator ==(Iterator a, Iterator b) => a.Node == b.Node && a.Position == b.Position;
             public static bool operator !=(Iterator a, Iterator b) => !(a == b);
+
             public override bool Equals(object obj)
             {
                 if (obj is Iterator)
@@ -115,10 +116,25 @@ namespace FastCollections.Unsafe
                 else
                     return false;
             }
+
             public override int GetHashCode()
             {
                 return base.GetHashCode();
             }
+
+            public static Iterator operator ++(Iterator iterator)
+            {
+                iterator.Increment();
+                return iterator;
+            }
+
+            public static Iterator operator --(Iterator iterator)
+            {
+                iterator.Decrement();
+                return iterator;
+            }
+
+            public static implicit operator bool(Iterator iterator) => iterator.IsValid;
 
             internal Iterator(Node node, int position)
             {
@@ -126,6 +142,9 @@ namespace FastCollections.Unsafe
                 Position = position;
             }
 
+            /// <summary>
+            /// Move to the next sorted element in the B-tree.
+            /// </summary>
             public void Increment()
             {
                 if (Node.IsLeaf && ++Position < Node.Count)
@@ -133,7 +152,7 @@ namespace FastCollections.Unsafe
                 IncrementSlow();
             }
 
-            public void IncrementBy(int count)
+            private void IncrementBy(int count)
             {
                 while (count > 0)
                 {
@@ -155,7 +174,7 @@ namespace FastCollections.Unsafe
                 }
             }
 
-            public void IncrementSlow()
+            private void IncrementSlow()
             {
                 if (Node.IsLeaf)
                 {
@@ -184,6 +203,9 @@ namespace FastCollections.Unsafe
                 }
             }
 
+            /// <summary>
+            /// Move to the previous sorted element in the B-tree.
+            /// </summary>
             public void Decrement()
             {
                 if (Node.IsLeaf && --Position >= 0)
@@ -191,7 +213,7 @@ namespace FastCollections.Unsafe
                 DecrementSlow();
             }
 
-            public void DecrementSlow()
+            private void DecrementSlow()
             {
                 if (Node.IsLeaf)
                 {
@@ -220,20 +242,57 @@ namespace FastCollections.Unsafe
                 }
             }
 
+            /// <summary>
+            /// Returns true if the iterator is valid and has a key/value associated with it.
+            /// </summary>
+            public bool IsValid => Node.NonEmpty && (uint)Position < Node.CountUInt;
+
+            /// <summary>
+            /// Gets the key associated with the position of this iterator.  For performance, iterator validity is 
+            /// not checked, and the result is undefined for an invalid iterator.
+            /// </summary>
             public TKey Key => Node.Key(Position);
 
+            /// <summary>
+            /// Gets or sets the value associated with the key of this iterator.  This checks if the iterator is
+            /// invalid when setting a value, and will throw a <see cref="NullReferenceException"/>.  For performance,
+            /// iterator validity is not checked on the getter, and the result is undefined for an invalid iterator.
+            /// </summary>
             public TValue Value
             {
-                get { return Node.Value(Position); }
-                set { Node.SetValue(Position, value); }
+                get
+                {
+                    return Node.Value(Position);
+                }
+                set
+                {
+                    if ((uint)Position < Node.CountUInt)
+                        Node.SetValue(Position, value);
+                    else
+                        throw new NullReferenceException();
+                }
             }
 
+            /// Sets the value associated with the key of this iterator. Throws <see cref="NullReferenceException"/> 
+            /// if the iterator is invalid.
+            /// </summary>
+            /// <param name="value">The new value.</param>
+            public void SetValue(TValue value)
+            {
+                if ((uint)Position < Node.CountUInt)
+                    Node.SetValue(Position, value);
+                else
+                    throw new NullReferenceException();
+            }
+
+            /// Gets the element associated with the key of this iterator.  For performance, iterator validity is 
+            /// not checked, and the result is undefined for an invalid iterator.
             public KeyValuePair<TKey, TValue> KeyValue => Node.GetKeyValue(Position);
+
+            internal uint PositionUInt => (uint)Position;
 
             internal Node Node;
             internal int Position;
-
-            internal uint PositionUInt => (uint)Position;
         }
 
         /// <summary>
@@ -850,13 +909,29 @@ namespace FastCollections.Unsafe
 
         public bool IsEmpty => _root == null;
 
-        private Iterator Begin => new Iterator(Leftmost, 0);
-        private Iterator End => new Iterator(Rightmost, Rightmost.NonEmpty ? Rightmost.Count : 0);
+        /// <summary>
+        /// An iterator pointing to the first sorted element.
+        /// </summary>
+        public Iterator Begin => new Iterator(Leftmost, 0);
 
-        private Iterator LowerBound(TKey key) => InternalEnd(InternalLowerBound(key, new Iterator(Root, 0)));
-        private Iterator UpperBound(TKey key) => InternalEnd(InternalUpperBound(key, new Iterator(Root, 0)));
+        /// <summary>
+        /// An iterator pointing to one past the last sorted element.
+        /// </summary>
+        public Iterator End => new Iterator(Rightmost, Rightmost.NonEmpty ? Rightmost.Count : 0);
 
-        private Iterator FindUnique(TKey key) => InternalEnd(InternalFindUnique(key, new Iterator(Root, 0)));
+        /// <summary>
+        /// Get an iterator pointing to the lower bound (exclusive) for this key.
+        /// </summary>
+        /// <param name="key">The key to search for.</param>
+        /// <returns></returns>
+        public Iterator LowerBound(TKey key) => InternalLowerBound(key, new Iterator(Root, 0));
+
+        /// <summary>
+        /// Get an iterator pointing to the upper bound (exclusive) for this key.
+        /// </summary>
+        /// <param name="key">The key to search for.</param>
+        /// <returns></returns>
+        public Iterator UpperBound(TKey key) => InternalUpperBound(key, new Iterator(Root, 0));
 
         /// <summary>
         /// The total number of bytes used by the B-tree on the heap.
@@ -1023,7 +1098,7 @@ namespace FastCollections.Unsafe
                     TryShrink();
                     if (IsEmpty)
                     {
-                        return End;
+                        return new Iterator();
                     }
                     break;
                 }
@@ -1577,8 +1652,6 @@ namespace FastCollections.Unsafe
             return iterator;
         }
 
-        private Iterator InternalEnd(Iterator iterator) => iterator.Node.NonEmpty ? iterator : End;
-
         private Node Leftmost
         {
             get { return _root != null ? new Node(_root->Parent) : Node.Empty; }
@@ -1633,7 +1706,7 @@ namespace FastCollections.Unsafe
         /// <returns><c>true</c> if the B-tree contains an element with the specified key.</returns>
         public bool ContainsKey(TKey key)
         {
-            return FindUnique(key) != End;
+            return Find(key);
         }
 
         /// <summary>
@@ -1654,8 +1727,8 @@ namespace FastCollections.Unsafe
         /// <returns><c>true</c> if the B-tree contains an element with the specified key.</returns>
         public bool TryGetValue(TKey key, out TValue value)
         {
-            var iter = FindUnique(key);
-            if (iter != End)
+            var iter = Find(key);
+            if (iter)
             {
                 value = iter.Value;
                 return true;
@@ -1695,8 +1768,8 @@ namespace FastCollections.Unsafe
         /// <returns><c>true</c> if the B-tree contains an element with the specified key and value.</returns>
         public bool Contains(KeyValuePair<TKey, TValue> item)
         {
-            var iter = FindUnique(item.Key);
-            if (iter == End)
+            var iter = Find(item.Key);
+            if (!iter)
                 return false;
 
             return _valueEqComparer.Equals(iter.Value, item.Value);
@@ -1709,7 +1782,7 @@ namespace FastCollections.Unsafe
         /// <param name="arrayIndex">The array index to start writing elements.</param>
         public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
         {
-            for (var iter = Begin; iter != End; iter.Increment(), ++arrayIndex)
+            for (var iter = Begin; iter; iter.Increment(), ++arrayIndex)
                 array[arrayIndex] = iter.KeyValue;
         }
 
@@ -1800,8 +1873,8 @@ namespace FastCollections.Unsafe
         {
             get
             {
-                var iter = FindUnique(key);
-                if (iter == End)
+                var iter = Find(key);
+                if (!iter)
                     throw new KeyNotFoundException();
                 else
                     return iter.Value; 
@@ -1815,6 +1888,16 @@ namespace FastCollections.Unsafe
                     iter.Value = value;
                 }
             }
+        }
+
+        /// <summary>
+        /// Gets an iterator pointing to the specified key.  If no key is found, the iterator is invalid.
+        /// </summary>
+        /// <param name="key">The key to locate in the B-tree.</param>
+        /// <returns>An iterator pointing to the specified key.  If the specified key is not found, the iterator is invalid.</returns>
+        public Iterator Find(TKey key)
+        {
+            return InternalFindUnique(key, new Iterator(Root, 0));
         }
 
         private NodeHeader* _root;

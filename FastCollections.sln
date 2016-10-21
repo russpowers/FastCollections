@@ -7,7 +7,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{D3247492-6D1
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{11B33345-6BDE-4662-9588-9102536C643E}"
 	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		buildpackage.bat = buildpackage.bat
+		FastCollections.nuspec = FastCollections.nuspec
 		global.json = global.json
+		LICENSE = LICENSE
+		README.md = README.md
 	EndProjectSection
 EndProject
 Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "FastCollections", "src\FastCollections\FastCollections.xproj", "{8BA82D5F-5E23-4D54-A37C-4D44BFF969CB}"

@@ -63,7 +63,7 @@ namespace FastCollections.Unsafe.Memory
                     _currentSlab += 1;
                 }
 
-                return (IntPtr)_slabs[_currentSlab].Ptr + _itemSize * (_slabs[_currentSlab].NextIndex++);
+                return (IntPtr)(_slabs[_currentSlab].Ptr + _itemSize * (_slabs[_currentSlab].NextIndex++));
             }
         }
 

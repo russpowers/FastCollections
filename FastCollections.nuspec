@@ -2,7 +2,7 @@
 <package>
   <metadata>
     <id>FastCollections</id>
-    <version>0.1.0.0</version>
+    <version>0.2.1</version>
     <title>Fast Collections</title>
     <authors>Russ Powers</authors>
     <owners>russpowers</owners>
@@ -10,7 +10,7 @@
     <projectUrl>https://github.com/russpowers/FastCollections</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>High-performance, memory-efficient collections for .NET</description>
-    <releaseNotes>Initial release</releaseNotes>
+    <releaseNotes>Updated iterator interface</releaseNotes>
     <copyright>Copyright 2016</copyright>
     <tags>B-tree Btree collection dictionary sorted</tags>
     <dependencies>

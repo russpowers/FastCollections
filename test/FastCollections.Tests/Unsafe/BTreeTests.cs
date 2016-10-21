@@ -68,6 +68,53 @@ namespace FastCollections.Tests.Unsafe
         }
 
         [Fact]
+        void Add1Item_ShouldBeInIterator()
+        {
+            tree.Add(1, 100);
+            var count = 0;
+            for (var iter = tree.Begin; iter; ++iter)
+            {
+                iter.Value.Should().Be(100);
+                ++count;
+            }
+            count.Should().Be(1);
+        }
+
+        [Fact]
+        void Add100ItemsAndIterateForwardAndBack_ShouldContainItems()
+        {
+            for (int i = 0; i < 5; ++i)
+                tree.Add(i, 100 + i);
+
+            var index = 0;
+            BTree<int, int>.Iterator iter;
+            for (iter = tree.Begin; iter; ++iter)
+            {
+                iter.Key.Should().Be(index);
+                iter.Value.Should().Be(index + 100);
+                ++index;
+            }
+            index.Should().Be(5);
+            --iter;
+            --index;
+            for (;iter; --iter)
+            {
+                iter.Key.Should().Be(index);
+                iter.Value.Should().Be(index + 100);
+                --index;
+            }
+            index.Should().Be(-1);
+        }
+
+        [Fact]
+        void Add1ItemAndChangeValueWithIterator_ValueShouldBeChanged()
+        {
+            tree.Add(1, 100);
+            tree.Begin.SetValue(105);
+            tree[1].Should().Be(105);
+        }
+
+        [Fact]
         public void Add1Item_ShouldBeInEnumerable()
         {
             tree.Add(1, 100);
