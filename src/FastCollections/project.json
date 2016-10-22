@@ -1,5 +1,5 @@
 {
-  "version": "0.2.1",
+  "version": "0.2.2",
 
   "dependencies": {
     "DotNetCross.Memory.Unsafe": "0.2.3.4",
@@ -17,6 +17,7 @@
   },
 
   "buildOptions": {
-    "allowUnsafe": true 
+    "allowUnsafe": true,
+    "xmlDoc": true 
   }
 }

@@ -36,13 +36,25 @@ namespace FastCollections.Unsafe
     // I know that it's kind of gross to put everything in one huge file, but it would be messy to remove
     // something big like the internal Node struct.. I will revisit the idea later when I have more time.
 
+    /// <summary>
+    /// Configuration for a B-tree.
+    /// </summary>
     public interface IBTreeConfig
     {
+        /// <summary>
+        /// The target size, in bytes, of a leaf node.
+        /// </summary>
         int TargetSize { get; }
     }
 
+    /// <summary>
+    /// The default configuration for a B-tree.
+    /// </summary>
     public struct DefaultBTreeConfig : IBTreeConfig
     {
+        /// <summary>
+        /// The target size, in bytes, of a leaf node.
+        /// </summary>
         public int TargetSize => 256;
     }
 
@@ -106,9 +118,19 @@ namespace FastCollections.Unsafe
         /// </summary>
         public struct Iterator
         {
+            /// <summary>
+            /// Returns true if iterators point to the same node and position.
+            /// </summary>
             public static bool operator ==(Iterator a, Iterator b) => a.Node == b.Node && a.Position == b.Position;
+
+            /// <summary>
+            /// Returns true if iterators do not point to the same node and position.
+            /// </summary>
             public static bool operator !=(Iterator a, Iterator b) => !(a == b);
 
+            /// <summary>
+            /// Returns true if iterators point to the same node and position.
+            /// </summary>
             public override bool Equals(object obj)
             {
                 if (obj is Iterator)
@@ -117,23 +139,35 @@ namespace FastCollections.Unsafe
                     return false;
             }
 
+            /// <summary>
+            /// Returns a hash code for the iterator.
+            /// </summary>
             public override int GetHashCode()
             {
                 return base.GetHashCode();
             }
 
+            /// <summary>
+            /// Move to the next sorted element in the B-tree.
+            /// </summary>
             public static Iterator operator ++(Iterator iterator)
             {
                 iterator.Increment();
                 return iterator;
             }
 
+            /// <summary>
+            /// Move to the previous sorted element in the B-tree.
+            /// </summary>
             public static Iterator operator --(Iterator iterator)
             {
                 iterator.Decrement();
                 return iterator;
             }
 
+            /// <summary>
+            /// Returns true if the iterator is valid.
+            /// </summary>
             public static implicit operator bool(Iterator iterator) => iterator.IsValid;
 
             internal Iterator(Node node, int position)
@@ -273,6 +307,7 @@ namespace FastCollections.Unsafe
                 }
             }
 
+            /// <summary>
             /// Sets the value associated with the key of this iterator. Throws <see cref="NullReferenceException"/> 
             /// if the iterator is invalid.
             /// </summary>
@@ -285,8 +320,10 @@ namespace FastCollections.Unsafe
                     throw new NullReferenceException();
             }
 
+            /// <summary>
             /// Gets the element associated with the key of this iterator.  For performance, iterator validity is 
             /// not checked, and the result is undefined for an invalid iterator.
+            /// </summary>
             public KeyValuePair<TKey, TValue> KeyValue => Node.GetKeyValue(Position);
 
             internal uint PositionUInt => (uint)Position;
@@ -306,15 +343,30 @@ namespace FastCollections.Unsafe
                 --_iterator.Position;
             }
 
+            /// <summary>
+            /// Move to the next sorted key value pair.
+            /// </summary>
             public bool MoveNext()
             {
                 _iterator.Increment();
                 return _iterator.Position != _iterator.Node.Count;
             }
 
+            /// <summary>
+            /// Reset the enumerator (not implemented).
+            /// </summary>
             public void Reset() { throw new NotImplementedException(); }
+
+            /// <summary>
+            /// Dispose of the enumerator.
+            /// </summary>
             public void Dispose() { }
+
+            /// <summary>
+            /// Gets the current value.
+            /// </summary>
             public KeyValuePair<TKey, TValue> Current => _iterator.KeyValue;
+
             object IEnumerator.Current => Current;
 
             private Iterator _iterator;
@@ -330,6 +382,9 @@ namespace FastCollections.Unsafe
                 _iterator = iterator;
             }
 
+            /// <summary>
+            /// Creates an enumerator to enumerate through the sorted key value pairs.
+            /// </summary>
             public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator() => new KeyValueEnumerator(_iterator);
             IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
@@ -348,14 +403,28 @@ namespace FastCollections.Unsafe
                 --_iterator.Position;
             }
 
+            /// <summary>
+            /// Move to the next sorted key value pair.
+            /// </summary>
             public bool MoveNext()
             {
                 _iterator.Increment();
                 return _iterator.Node != _end.Node || _iterator.Position != _end.Position;
             }
 
+            /// <summary>
+            /// Reset the enumerator (not implemented).
+            /// </summary>
             public void Reset() { throw new NotImplementedException(); }
+
+            /// <summary>
+            /// Dispose of the enumerator.
+            /// </summary>
             public void Dispose() { }
+
+            /// <summary>
+            /// Gets the current value.
+            /// </summary>
             public KeyValuePair<TKey, TValue> Current => _iterator.KeyValue;
             object IEnumerator.Current => Current;
 
@@ -374,6 +443,9 @@ namespace FastCollections.Unsafe
                 _end = end;
             }
 
+            /// <summary>
+            /// Creates an enumerator to enumerate through the sorted key value pairs within a range.
+            /// </summary>
             public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator() => new KeyValueRangeEnumerator(_start, _end);
             IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
@@ -907,6 +979,9 @@ namespace FastCollections.Unsafe
                 Dispose();
         }
 
+        /// <summary>
+        /// Returns true if the B-tree has no elements.
+        /// </summary>
         public bool IsEmpty => _root == null;
 
         /// <summary>
@@ -1691,7 +1766,7 @@ namespace FastCollections.Unsafe
         /// Adds the specified key and value to the B-tree. Will throw <see cref="ArgumentException"/> if the key already exists. 
         /// </summary>
         /// <param name="key">The key of the element to add.</param>
-        /// <param name="value">The value of the element to add. The value can be <see cref="null"/> for reference types.</param>
+        /// <param name="value">The value of the element to add. The value can be <c>null</c> for reference types.</param>
         public void Add(TKey key, TValue value)
         {
             var res = InsertUnique(key, value);
@@ -1776,7 +1851,7 @@ namespace FastCollections.Unsafe
         }
 
         /// <summary>
-        /// Copies the elements of the B-tree to an array of type <see cref="KeyValuePair<TKey, TValue>" />, starting at the specified array index.
+        /// Copies the elements of the B-tree to an array of type <see cref="KeyValuePair{TKey, TValue}" />, starting at the specified array index.
         /// </summary>
         /// <param name="array">The destination array.</param>
         /// <param name="arrayIndex">The array index to start writing elements.</param>

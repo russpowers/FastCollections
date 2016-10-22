@@ -1,6 +1,6 @@
 ﻿namespace FastCollections.Util
 {
-    public struct Pair<T, U>
+    struct Pair<T, U>
     {
         public Pair(T first, U second)
         {

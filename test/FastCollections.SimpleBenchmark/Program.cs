@@ -22,12 +22,12 @@ namespace FastCollections.SimpleBenchmark
         const int COUNT = 10000000;
         const int TESTCOUNT = 5;
 
+        static BTree<ulong, int> tree = new BTree<ulong, int>();
+
         private static void Test(int[] values)
         {
-            var t = new BTree<ulong, int, DefaultKeyComparer<ulong>, BTreeConfig>();
-            
             for (int i = 0; i < COUNT; ++i)
-                t.Add((uint)values[i], values[i]);
+                tree.Add((uint)values[i], values[i]);
         }
 
         public static void Main(string[] args)
@@ -40,7 +40,12 @@ namespace FastCollections.SimpleBenchmark
             var s = new Stopwatch();
             s.Start();
             for (int i = 0; i < TESTCOUNT; ++i)
+            {
                 Test(values);
+                s.Stop();
+                tree.Clear();
+                s.Start();
+            }
             Console.WriteLine(s.Elapsed.TotalSeconds / TESTCOUNT);
         }
     }

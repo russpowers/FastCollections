@@ -2,15 +2,17 @@
 <package>
   <metadata>
     <id>FastCollections</id>
-    <version>0.2.1</version>
+    <version>0.2.2</version>
     <title>Fast Collections</title>
     <authors>Russ Powers</authors>
     <owners>russpowers</owners>
     <licenseUrl>https://github.com/russpowers/FastCollections/blob/master/LICENSE</licenseUrl>
     <projectUrl>https://github.com/russpowers/FastCollections</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>High-performance, memory-efficient collections for .NET</description>
-    <releaseNotes>Updated iterator interface</releaseNotes>
+    <description>
+      High-performance, memory-efficient collections for .NET. Right now, the package has a fast, compact B-tree based on Google's C++ B-tree library. Other collections are coming soon!
+    </description>
+    <releaseNotes>Added XML docs</releaseNotes>
     <copyright>Copyright 2016</copyright>
     <tags>B-tree Btree collection dictionary sorted</tags>
     <dependencies>
@@ -39,5 +41,7 @@
   <files>
     <file src="src\FastCollections\bin\Release\netstandard1.1\FastCollections.dll" target="lib\netstandard1.1" />
     <file src="src\FastCollections\bin\Release\netstandard1.1\FastCollections.dll" target="lib\portable-net45+win8+wpa81" />
+    <file src="src\FastCollections\bin\Release\netstandard1.1\FastCollections.xml" target="lib\netstandard1.1" />
+    <file src="src\FastCollections\bin\Release\netstandard1.1\FastCollections.xml" target="lib\portable-net45+win8+wpa81" />
   </files>
 </package>

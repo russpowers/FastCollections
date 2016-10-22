@@ -4,13 +4,25 @@ using System.Runtime.InteropServices;
 
 namespace FastCollections.Unsafe.Memory
 {
+    /// <summary>
+    /// Allocates slabs of memory of a specified size, then uses that memory to allocate
+    /// pooled items.
+    /// </summary>
     public unsafe class SlabPool : IPool<IntPtr>
     {
-        public static Func<int, SlabPool> Factory(int itemsPerSlab = 1024, int maxSlabSize = 0, int initialSlabs = 1)
+        /// <summary>
+        /// Produces a slab pool factory, used in <see cref="PooledAllocator{T}"/>.  If both <paramref name="maxSlabSize"/> and
+        /// <paramref name="maxItemsPerSlab"/> are specified, maxSlabSize wins.
+        /// </summary>
+        /// <param name="maxItemsPerSlab">The maximum number of items per slab.</param>
+        /// <param name="maxSlabSize">The maximum slab size.</param>
+        /// <param name="initialSlabs">The initiual slab count.</param>
+        /// <returns></returns>
+        public static Func<int, SlabPool> Factory(int maxItemsPerSlab = 1024, int maxSlabSize = 0, int initialSlabs = 1)
         {
             return (itemSize) =>
             {
-                var adjustedSlabSize = maxSlabSize > 0 ? Math.Min(itemsPerSlab * itemSize, maxSlabSize) : (itemSize * itemsPerSlab);
+                var adjustedSlabSize = maxSlabSize > 0 ? Math.Min(maxItemsPerSlab * itemSize, maxSlabSize) : (itemSize * maxItemsPerSlab);
                 var adjustedItemsPerSlab = adjustedSlabSize / itemSize;
                 return new SlabPool(itemSize, adjustedItemsPerSlab, initialSlabs);
             };
@@ -28,6 +40,12 @@ namespace FastCollections.Unsafe.Memory
             public int NextIndex;
         }
 
+        /// <summary>
+        /// Create a new slab pool.
+        /// </summary>
+        /// <param name="itemSize">The size of the items.</param>
+        /// <param name="itemsPerSlab">The number of items per slab.</param>
+        /// <param name="initialSlabs">The initiual slab count.</param>
         public SlabPool(int itemSize, int itemsPerSlab = 1024, int initialSlabs = 1)
         {
             _itemSize = itemSize;
@@ -39,6 +57,9 @@ namespace FastCollections.Unsafe.Memory
             }
         }
 
+        /// <summary>
+        /// Get a new pooled item.
+        /// </summary>
         public IntPtr Get()
         {
             if (_freeListLength > 0)
@@ -67,6 +88,9 @@ namespace FastCollections.Unsafe.Memory
             }
         }
 
+        /// <summary>
+        /// Free a previously allocated pooled item.
+        /// </summary>
         public void Free(IntPtr item)
         {
             if (_freeList.Length <= _freeListLength)
@@ -80,6 +104,9 @@ namespace FastCollections.Unsafe.Memory
             _freeList[_freeListLength++] = (byte*)item;
         }
 
+        /// <summary>
+        /// Dispose of all slabs.
+        /// </summary>
         public void Dispose()
         {
             foreach (var slab in _slabs)

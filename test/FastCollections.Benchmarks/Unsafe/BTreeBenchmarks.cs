@@ -32,6 +32,7 @@ namespace FastCollections.Benchmarks.Unsafe
 
         public BTreeBenchmarks()
         {
+            Console.WriteLine("CTOR");
             values = new int[COUNT];
             for (int i = 0; i < COUNT; ++i)
                 values[i] = i;
@@ -39,25 +40,30 @@ namespace FastCollections.Benchmarks.Unsafe
             values.Shuffle(10);
         }
 
+        BTree<ulong, int> tree;
+
         int[] values;
 
         [Setup]
         public void Setup()
         {
+            Console.WriteLine("SETUP");
+            tree = new BTree<ulong, int>();
         }
 
         [Cleanup]
         public void Cleanup()
         {
+            Console.WriteLine("CLEANUP");
+            tree.Dispose();
         }
 
-        [Benchmark]
+        [Benchmark(OperationsPerInvoke = 1)]
         public void Insert10MRandom()
         {
-            var tree = new BTree<ulong, int, DefaultKeyComparer<ulong>>();
+            Console.WriteLine("Insert10MRandom");
             for (int i = 0; i < COUNT; ++i)
                 tree.Add((uint)values[i], values[i]);
-            tree.Dispose();
         }
     }
 }

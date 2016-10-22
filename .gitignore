@@ -188,5 +188,5 @@ $RECYCLE.BIN/
 #####
 
 BDN.Auto/
-test/Specialized.Benchmarks/BenchmarkDotNet.Artifacts
+test/FastCollections.Benchmarks/BenchmarkDotNet.Artifacts
 **/*.lock.json
