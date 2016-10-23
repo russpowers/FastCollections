@@ -136,7 +136,7 @@ namespace FastCollections.Tests.Unsafe
         {
             tree.Add(1, 100);
             var rangeEnum = tree.Range(1, 1);
-            rangeEnum.Count().Should().Be(0);
+            rangeEnum.Count().Should().Be(1);
         }
 
         [Fact]
@@ -183,6 +183,30 @@ namespace FastCollections.Tests.Unsafe
                 ++index;
             }
         }
+
+        [Fact]
+        public void Range_EndLessThanStart_ShouldThrow()
+        {
+            Action test = () => tree.Range(3, 1);
+            test.ShouldThrow<ArgumentOutOfRangeException>();
+        }
+
+        [Fact]
+        public void Add100ItemsSpacedAndGetRangeForLastHalf_RangeShouldContainLastHalf()
+        {
+            for (int i = 10; i >= 0; --i)
+                tree.Add(i * 10, i);
+
+            var rangeEnum = tree.Range(45, 100000);
+            rangeEnum.Count().Should().Be(6);
+            var index = 5;
+            foreach (var item in rangeEnum)
+            {
+                item.Key.Should().Be(index*10);
+                ++index;
+            }
+        }
+
 
         [Fact]
         public void Add1000Items_ShouldHaveItemsInSortedOrder()

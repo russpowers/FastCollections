@@ -109,6 +109,9 @@ namespace FastCollections.Unsafe
         private static bool KeyLessThan(TKey a, TKey b) => _keyComparer.LessThan(a, b);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool KeyGreaterThan(TKey a, TKey b) => _keyComparer.GreaterThan(a, b);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool ValueEquals(TValue a, TValue b) => _valueEqComparer.Equals(a, b);
 
         /// <summary>
@@ -340,7 +343,7 @@ namespace FastCollections.Unsafe
             internal KeyValueEnumerator(Iterator iterator)
             {
                 _iterator = iterator;
-                --_iterator.Position;
+                --_iterator;
             }
 
             /// <summary>
@@ -400,7 +403,7 @@ namespace FastCollections.Unsafe
             {
                 _iterator = start;
                 _end = end;
-                --_iterator.Position;
+                --_iterator;
             }
 
             /// <summary>
@@ -650,7 +653,7 @@ namespace FastCollections.Unsafe
                 }
             }
 
-            internal int LinearSearch(TKey k)
+            internal int LinearSearchLower(TKey k)
             {
                 int s = 0;
                 int e = Count;
@@ -658,6 +661,20 @@ namespace FastCollections.Unsafe
                 while (s < e)
                 {
                     if (!KeyLessThan(MemUnsafe.Read<TKey>(keys + s * SIZEOF_KEY_VALUE), k))
+                        return s;
+                    ++s;
+                }
+                return s;
+            }
+
+            internal int LinearSearchUpper(TKey k)
+            {
+                int s = 0;
+                int e = Count;
+                var keys = Keys;
+                while (s < e)
+                {
+                    if (KeyGreaterThan(MemUnsafe.Read<TKey>(keys + s * SIZEOF_KEY_VALUE), k))
                         return s;
                     ++s;
                 }
@@ -706,6 +723,7 @@ namespace FastCollections.Unsafe
 
             public void RebalanceRightToLeft(Node src, int toMove)
             {
+                Debug.Assert(src.IsLeaf == IsLeaf);
                 Debug.Assert(Parent == src.Parent);
                 Debug.Assert(Position + 1 == src.Position);
                 Debug.Assert(src.Count >= Count);
@@ -752,6 +770,7 @@ namespace FastCollections.Unsafe
 
             public void RebalanceLeftToRight(Node dest, int toMove)
             {
+                Debug.Assert(dest.IsLeaf == IsLeaf);
                 Debug.Assert(Parent == dest.Parent);
                 Debug.Assert(Position + 1 == dest.Position);
                 Debug.Assert(Count >= dest.Count);
@@ -995,18 +1014,18 @@ namespace FastCollections.Unsafe
         public Iterator End => new Iterator(Rightmost, Rightmost.NonEmpty ? Rightmost.Count : 0);
 
         /// <summary>
-        /// Get an iterator pointing to the lower bound (exclusive) for this key.
+        /// Gets an iterator pointing to the first element greater than or equal to the specified key. 
         /// </summary>
         /// <param name="key">The key to search for.</param>
         /// <returns></returns>
-        public Iterator LowerBound(TKey key) => InternalLowerBound(key, new Iterator(Root, 0));
+        public Iterator LowerBound(TKey key) => InternalEnd(InternalLowerBound(key, new Iterator(Root, 0)));
 
         /// <summary>
-        /// Get an iterator pointing to the upper bound (exclusive) for this key.
+        /// Gets an iterator pointing to the first element greater than the specified key. 
         /// </summary>
         /// <param name="key">The key to search for.</param>
         /// <returns></returns>
-        public Iterator UpperBound(TKey key) => InternalUpperBound(key, new Iterator(Root, 0));
+        public Iterator UpperBound(TKey key) => InternalEnd(InternalUpperBound(key, new Iterator(Root, 0)));
 
         /// <summary>
         /// The total number of bytes used by the B-tree on the heap.
@@ -1080,6 +1099,7 @@ namespace FastCollections.Unsafe
 
         private Node NewLeafNode(Node parent)
         {
+            Debug.Assert(parent.IsEmpty || !parent.IsLeaf);
             var h = (NodeHeader*)_allocator.Allocate(SIZEOF_LEAF_NODE);
             Node.InitLeaf(h, parent.Ptr, NODE_KV_COUNT);
             return new Node(h);
@@ -1557,13 +1577,15 @@ namespace FastCollections.Unsafe
             }
         }
 
+        private Iterator InternalEnd(Iterator iterator) => iterator.Node.IsEmpty ? End : iterator;
+
         private Iterator InternalLowerBound(TKey key, Iterator iterator)
         {
             if (iterator.Node.NonEmpty)
             {
                 for (;;)
                 {
-                    iterator.Position = iterator.Node.LinearSearch(key);
+                    iterator.Position = iterator.Node.LinearSearchLower(key);
                     if (iterator.Node.IsLeaf)
                     {
                         break;
@@ -1582,13 +1604,14 @@ namespace FastCollections.Unsafe
             {
                 for (;;)
                 {
-                    iterator.Position = iterator.Node.LinearSearch(key);
+                    iterator.Position = iterator.Node.LinearSearchUpper(key);
                     if (iterator.Node.IsLeaf)
                     {
                         break;
                     }
                     iterator.Node = iterator.Node.Child(iterator.Position);
                 }
+                iterator = InternalLast(iterator);
             }
             return iterator;
         }
@@ -1893,10 +1916,13 @@ namespace FastCollections.Unsafe
         /// Returns an enumerable that can iterate through a range in the B-tree in sorted order.
         /// </summary>
         /// <param name="start">The starting key, inclusive.  If the key does not exist, the next highest existing key will be used.</param>
-        /// <param name="end">The ending key, exclusive.  The key does not need to exist.</param>
+        /// <param name="end">The ending key, inclusive.  If the key does not exist, the next lowest existing key will be used.</param>
         /// <returns>The range enumerable.</returns>
         public KeyValueRangeEnumerable Range(TKey start, TKey end)
         {
+            if (KeyLessThan(end, start))
+                throw new ArgumentOutOfRangeException("end", end, "End of range should not be less than the start");
+
             var lowerIter = LowerBound(start);
             var upperIter = UpperBound(end);
             return new KeyValueRangeEnumerable(lowerIter, upperIter);
@@ -1909,7 +1935,7 @@ namespace FastCollections.Unsafe
         /// <returns>The enumerable.</returns>
         public KeyValueEnumerable From(TKey start)
         {
-            var lowerIter = InternalLowerBound(start, Begin);
+            var lowerIter = LowerBound(start);
             return new KeyValueEnumerable(lowerIter);
         }
 
